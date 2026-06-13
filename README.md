@@ -2,7 +2,7 @@
 
 A Blazor Server SPA that translates gettext `.po` files in real time. Upload a file, pick source and target languages, watch each entry translate live, then download the result.
 
-Inspired by [carlose119/traductorpo](https://github.com/carlose119/traductorpo) (PHP). Rewritten in .NET 10 with a web UI.
+Inspired by [carlose119/traductor-po-php](https://github.com/carlose119/traductor-po-php) (PHP). Rewritten in .NET 10 with a web UI.
 
 ---
 
@@ -20,18 +20,18 @@ Open `http://localhost:5050` (or the URL shown in the terminal).
 
 ## How to use
 
-| Step | Action |
-|------|--------|
-| **1 — Import** | Click the upload zone and select a `.po` file (max 50 MB). Chips show total entries / pending / already translated. |
-| **2 — Configure** | Choose a translation provider and select source and target languages. |
+| Step              | Action                                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **1 — Import**    | Click the upload zone and select a `.po` file (max 50 MB). Chips show total entries / pending / already translated.                |
+| **2 — Configure** | Choose a translation provider and select source and target languages.                                                              |
 | **3 — Translate** | Click **Start translation**. A live terminal log shows each entry as it processes. Use **Stop** to cancel without losing progress. |
-| **4 — Export** | Click **Download translated .po** to save the result. |
+| **4 — Export**    | Click **Download translated .po** to save the result.                                                                              |
 
 ---
 
 ## Translation providers
 
-### Google Translate *(default)*
+### Google Translate _(default)_
 
 Uses the same unofficial API as the original PHP project — no key required.
 
@@ -45,10 +45,10 @@ Supports auto-detect as source language. Best for occasional use; aggressive use
 
 Open-source translation engine. Works with public instances or a self-hosted server.
 
-| Field | Description |
-|-------|-------------|
-| URL | Instance address (default: `https://translate.argosopentech.com`) |
-| API Key | Optional — required on some instances and `libretranslate.com` |
+| Field   | Description                                                       |
+| ------- | ----------------------------------------------------------------- |
+| URL     | Instance address (default: `https://translate.argosopentech.com`) |
+| API Key | Optional — required on some instances and `libretranslate.com`    |
 
 **Test connection** verifies the instance before you start. The **Public instances** menu lists known free endpoints.
 
@@ -68,12 +68,12 @@ https://translate.fedilab.app
 
 Both providers apply automatic retry with exponential backoff when a `429 Too Many Requests` response is received.
 
-| Attempt | Wait before retry |
-|---------|------------------|
-| 1st | 5 s |
-| 2nd | 12 s |
-| 3rd | 25 s |
-| 4th | Error — entry marked ✗ |
+| Attempt | Wait before retry      |
+| ------- | ---------------------- |
+| 1st     | 5 s                    |
+| 2nd     | 12 s                   |
+| 3rd     | 25 s                   |
+| 4th     | Error — entry marked ✗ |
 
 A `Retry-After` header in the response overrides the default wait time. There is also an 800 ms pause between every request to reduce the chance of hitting rate limits in the first place.
 
@@ -83,28 +83,28 @@ A `Retry-After` header in the response overrides the default wait time. There is
 
 The parser handles the gettext format natively — no external library dependency.
 
-| Feature | Supported |
-|---------|-----------|
-| `msgid` / `msgstr` | ✓ |
-| `msgctxt` (context) | ✓ |
-| Multi-line strings (`""\n"..."`) | ✓ |
-| Comments (`#`, `#.`, `#:`, `#,`) | ✓ preserved in output |
-| `msgid_plural` / `msgstr[n]` | — (skipped) |
-| Entries already translated | Skipped (only empty `msgstr` are translated) |
+| Feature                          | Supported                                    |
+| -------------------------------- | -------------------------------------------- |
+| `msgid` / `msgstr`               | ✓                                            |
+| `msgctxt` (context)              | ✓                                            |
+| Multi-line strings (`""\n"..."`) | ✓                                            |
+| Comments (`#`, `#.`, `#:`, `#,`) | ✓ preserved in output                        |
+| `msgid_plural` / `msgstr[n]`     | — (skipped)                                  |
+| Entries already translated       | Skipped (only empty `msgstr` are translated) |
 
 ---
 
 ## Tech stack
 
-| Layer | Technology |
-|-------|-----------|
-| Runtime | .NET 10 |
-| UI framework | Blazor Server |
-| Component library | MudBlazor 9 (dark theme) |
+| Layer                | Technology                                |
+| -------------------- | ----------------------------------------- |
+| Runtime              | .NET 10                                   |
+| UI framework         | Blazor Server                             |
+| Component library    | MudBlazor 9 (dark theme)                  |
 | Translation — Google | `translate.googleapis.com` unofficial API |
-| Translation — Libre | LibreTranslate REST API |
-| Real-time updates | `InvokeAsync(StateHasChanged)` per entry |
-| File download | JS interop (`window.downloadFile`) |
+| Translation — Libre  | LibreTranslate REST API                   |
+| Real-time updates    | `InvokeAsync(StateHasChanged)` per entry  |
+| File download        | JS interop (`window.downloadFile`)        |
 
 ---
 

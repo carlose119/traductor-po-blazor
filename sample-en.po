@@ -1,0 +1,226 @@
+# PO Translator - Sample English to Spanish Translation File
+msgid ""
+msgstr ""
+"Project-Id-Version: PO Translator Demo\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-15 10:00+0000\n"
+"PO-Revision-Date: 2024-01-15 10:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: PO Translator\n"
+"X-Original-Filename: sample-en.po\n"
+
+# Application welcome message
+msgid "Welcome to our application"
+msgstr ""
+
+# Button labels
+msgid "Submit"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Confirm"
+msgstr ""
+
+msgid "Retry"
+msgstr ""
+
+# Form labels
+msgid "Username"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Remember me"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Filter"
+msgstr ""
+
+# Navigation
+msgid "Home"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "Contact"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Logout"
+msgstr ""
+
+msgid "Register"
+msgstr ""
+
+# Error messages
+msgid "Invalid input"
+msgstr ""
+
+msgid "Field required"
+msgstr ""
+
+msgid "Connection error"
+msgstr ""
+
+msgid "Please try again"
+msgstr ""
+
+msgid "Session expired"
+msgstr ""
+
+msgid "Access denied"
+msgstr ""
+
+# Success messages
+msgid "Operation successful"
+msgstr ""
+
+msgid "Changes saved"
+msgstr ""
+
+msgid "File uploaded"
+msgstr ""
+
+msgid "Data deleted"
+msgstr ""
+
+msgid "Thank you"
+msgstr ""
+
+# General
+msgid "Hello"
+msgstr ""
+
+msgid "World"
+msgstr ""
+
+msgid "Loading"
+msgstr ""
+
+msgid "Searching"
+msgstr ""
+
+msgid "No results found"
+msgstr ""
+
+msgid "Show more"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+# Menu items
+msgid "Settings"
+msgstr ""
+
+msgid "Profile"
+msgstr ""
+
+msgid "Dashboard"
+msgstr ""
+
+msgid "Reports"
+msgstr ""
+
+msgid "Help"
+msgstr ""
+
+msgid "Notifications"
+msgstr ""
+
+msgid "Messages"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
+msgid "Create new"
+msgstr ""
+
+msgid "Export"
+msgstr ""
+
+msgid "Import"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Upload"
+msgstr ""
+
+# Status messages
+msgid "Processing"
+msgstr ""
+
+msgid "Completed"
+msgstr ""
+
+msgid "Pending"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "In progress"
+msgstr ""
+
+msgid "Waiting"
+msgstr ""
+
+# Pagination
+msgid "Previous"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+msgid "of"
+msgstr ""
+
+msgid "Items per page"
+msgstr ""
+
+msgid "First"
+msgstr ""
+
+msgid "Last"
+msgstr ""

@@ -1,0 +1,99 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+/* Gradient title */
+.gradient-title {
+    background: linear-gradient(135deg, #D0BCFF 0%, #02CBC1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* Step cards */
+.step-card {
+    border-left: 4px solid transparent;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.step-active {
+    border-left: 4px solid #D0BCFF;
+}
+
+.export-card {
+    border-left: 4px solid #3fb950 !important;
+}
+
+/* Step avatar */
+.step-avatar {
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Upload zone */
+.upload-zone {
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    min-height: 140px;
+}
+
+.upload-zone:hover {
+    border-color: #D0BCFF !important;
+    background-color: rgba(208, 188, 255, 0.05) !important;
+}
+
+/* Terminal log */
+.terminal-log {
+    font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+    font-size: 12.5px;
+    background: #0d1117;
+    color: #e6edf3;
+    border-radius: 8px;
+    padding: 14px 16px;
+    max-height: 340px;
+    overflow-y: auto;
+    line-height: 1.75;
+    border: 1px solid #30363d;
+}
+
+.log-line { margin: 0; }
+.log-success { color: #3fb950; }
+.log-pending { color: #d29922; }
+.log-error   { color: #f85149; }
+.log-info    { color: #79c0ff; }
+
+/* Spacing helpers */
+.mb-10 { margin-bottom: 2.5rem; }
+
+/* Blazor error UI */
+#blazor-error-ui {
+    background: #ffcc00;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.blazor-error-boundary {
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+    background: #b32121;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}

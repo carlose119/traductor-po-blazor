@@ -1,0 +1,31 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+
+# Rider
+.idea/
+
+# Published output
+publish/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# ASP.NET
+wwwroot/lib/
+
+# Environment
+.env
+appsettings.Local.json
+appsettings.*.local.json
+
+# OS
+.DS_Store
+Thumbs.db

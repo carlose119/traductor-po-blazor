@@ -1,0 +1,493 @@
+@page "/"
+@inject LibreTranslateService Translation
+@inject PoFileService PoService
+@inject IJSRuntime JS
+
+<PageTitle>TraductorPO — .po File Translator</PageTitle>
+
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="false" Fixed="true">
+        <MudText Typo="Typo.h6" Class="gradient-title ml-2">🌐 TraductorPO</MudText>
+        <MudSpacer />
+        @if (_isDone)
+        {
+            <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="mr-2">
+                @_done / @_total translated
+            </MudChip>
+        }
+        else if (_isRunning)
+        {
+            <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" Class="mr-3" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mr-3">Translating...</MudText>
+        }
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-8">
+
+            <!-- Hero -->
+            <div class="text-center mb-10">
+                <MudText Typo="Typo.h3" Class="gradient-title mb-2">
+                    Translate .po files instantly
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Powered by LibreTranslate — open source, no API key required
+                </MudText>
+            </div>
+
+            <!-- Step 1: Upload -->
+            <MudCard Class="@CardClass(1)" Elevation="3">
+                <MudCardContent Class="pa-6">
+                    <div class="d-flex align-center mb-5">
+                        <MudAvatar Color="@AvatarColor(1)" Size="Size.Medium" Class="mr-4 step-avatar">1</MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.h6">Import .po file</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                Select the .po file you want to translate
+                            </MudText>
+                        </div>
+                    </div>
+
+                    <InputFile id="fileInput" OnChange="OnFileSelected" accept=".po" style="display:none" />
+                    <label for="fileInput" style="display:block; cursor:pointer;">
+                        <MudPaper Class="upload-zone d-flex flex-column align-center justify-center pa-8"
+                                  Outlined="true">
+                            <MudIcon Icon="@Icons.Material.Filled.FileUpload"
+                                     Color="Color.Primary" Size="Size.Large" Class="mb-2" />
+                            <MudText Typo="Typo.body1" Class="mb-1">
+                                Click to select a .po file
+                            </MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                Supports gettext .po format — max 50 MB
+                            </MudText>
+                        </MudPaper>
+                    </label>
+
+                    @if (_fileName != null)
+                    {
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <MudChip T="string" Color="Color.Success"
+                                     Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small">
+                                @_fileName
+                            </MudChip>
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">
+                                @_entries.Count entries total
+                            </MudChip>
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small">
+                                @_entries.Count(e => e.NeedsTranslation) pending
+                            </MudChip>
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small">
+                                @_entries.Count(e => !e.NeedsTranslation) already translated
+                            </MudChip>
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Step 2: Languages + Config -->
+            @if (_entries.Count > 0)
+            {
+                <MudCard Class="@CardClass(2)" Elevation="3">
+                    <MudCardContent Class="pa-6">
+                        <div class="d-flex align-center mb-5">
+                            <MudAvatar Color="@AvatarColor(2)" Size="Size.Medium" Class="mr-4 step-avatar">2</MudAvatar>
+                            <div>
+                                <MudText Typo="Typo.h6">Configure translation</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    Set languages and LibreTranslate instance
+                                </MudText>
+                            </div>
+                        </div>
+
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudSelect T="string" @bind-Value="_source" Label="Source language"
+                                           Variant="Variant.Outlined" Disabled="_isRunning">
+                                    @foreach (var lang in _languages)
+                                    {
+                                        <MudSelectItem Value="@lang.Code">@lang.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudSelect T="string" @bind-Value="_target" Label="Target language"
+                                           Variant="Variant.Outlined" Disabled="_isRunning">
+                                    @foreach (var lang in _languages)
+                                    {
+                                        <MudSelectItem Value="@lang.Code">@lang.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="_apiUrl"
+                                              Label="LibreTranslate URL"
+                                              Variant="Variant.Outlined"
+                                              Disabled="_isRunning"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Filled.Link"
+                                              HelperText="Public or self-hosted instance" />
+                            </MudItem>
+
+                            <MudItem xs="12" md="6" Class="d-flex align-center gap-2">
+                                <MudTooltip Text="Test connection">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="@_testColor"
+                                               StartIcon="@_testIcon"
+                                               OnClick="TestConnectionAsync"
+                                               Disabled="_isRunning || _isTesting">
+                                        @(_isTesting ? "Testing..." : "Test")
+                                    </MudButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Reload language list">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                                   Color="Color.Secondary"
+                                                   OnClick="LoadLanguagesAsync"
+                                                   Disabled="_isRunning" />
+                                </MudTooltip>
+                                <MudMenu Label="Public instances" Variant="Variant.Text"
+                                         Color="Color.Default" Dense="true" Disabled="_isRunning">
+                                    @foreach (var url in LibreTranslateService.PublicInstances)
+                                    {
+                                        <MudMenuItem OnClick="@(() => SelectInstance(url))">@url</MudMenuItem>
+                                    }
+                                </MudMenu>
+                            </MudItem>
+
+                            @if (_testMessage != null)
+                            {
+                                <MudItem xs="12">
+                                    <MudAlert Severity="@_testSeverity" Dense="true" Class="py-1">
+                                        @_testMessage
+                                    </MudAlert>
+                                </MudItem>
+                            }
+
+                            <MudItem xs="12" md="6">
+                                <MudTextField @bind-Value="_apiKey"
+                                              Label="API Key (optional)"
+                                              Variant="Variant.Outlined"
+                                              InputType="InputType.Password"
+                                              Disabled="_isRunning"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Filled.VpnKey"
+                                              HelperText="Leave empty for public instances" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            }
+
+            <!-- Step 3: Translate -->
+            @if (_entries.Count > 0)
+            {
+                <MudCard Class="@CardClass(3)" Elevation="3">
+                    <MudCardContent Class="pa-6">
+                        <div class="d-flex align-center mb-5">
+                            <MudAvatar Color="@AvatarColor(3)" Size="Size.Medium" Class="mr-4 step-avatar">3</MudAvatar>
+                            <div class="flex-grow-1">
+                                <MudText Typo="Typo.h6">Translate</MudText>
+                                @if (_isRunning || _isDone)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @_done of @_total entries · @($"{_progress:F0}")%
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @_entries.Count(e => e.NeedsTranslation) entries will be translated
+                                    </MudText>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 mb-5">
+                            @if (!_isRunning)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                           Size="Size.Large"
+                                           StartIcon="@Icons.Material.Filled.Translate"
+                                           OnClick="StartAsync"
+                                           Disabled="@(string.IsNullOrEmpty(_source) || string.IsNullOrEmpty(_target) || _entries.Count(e => e.NeedsTranslation) == 0)">
+                                    Start translation
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.Stop"
+                                           OnClick="() => _cts?.Cancel()">
+                                    Stop
+                                </MudButton>
+                            }
+                        </div>
+
+                        @if (_isRunning || _isDone || _log.Count > 0)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-space-between mb-1">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Progress</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@($"{_progress:F0}")%</MudText>
+                                </div>
+                                <MudProgressLinear Color="@(_isDone ? Color.Success : Color.Primary)"
+                                                   Rounded="true" Size="Size.Medium"
+                                                   Value="_progress" />
+                            </div>
+
+                            <div class="terminal-log" id="terminal-log">
+                                @foreach (var line in _log)
+                                {
+                                    <div class="log-line @line.Css">@line.Text</div>
+                                }
+                            </div>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            }
+
+            <!-- Step 4: Export -->
+            @if (_isDone)
+            {
+                <MudCard Class="mb-5 step-card export-card" Elevation="3">
+                    <MudCardContent Class="pa-6">
+                        <div class="d-flex align-center mb-5">
+                            <MudAvatar Color="Color.Success" Size="Size.Medium" Class="mr-4 step-avatar">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                            </MudAvatar>
+                            <div>
+                                <MudText Typo="Typo.h6">Export result</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    Your translated .po file is ready
+                                </MudText>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-3 align-center">
+                            <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                       Size="Size.Large"
+                                       StartIcon="@Icons.Material.Filled.Download"
+                                       OnClick="ExportAsync">
+                                Download translated .po
+                            </MudButton>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small">
+                                    @_done translated
+                                </MudChip>
+                                <MudChip T="string" Color="Color.Default" Size="Size.Small">
+                                    @_entries.Count(e => e.Status == TranslationStatus.Skipped) skipped
+                                </MudChip>
+                                @if (_entries.Any(e => e.Status == TranslationStatus.Error))
+                                {
+                                    <MudChip T="string" Color="Color.Error" Size="Size.Small">
+                                        @_entries.Count(e => e.Status == TranslationStatus.Error) errors
+                                    </MudChip>
+                                }
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            }
+
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private string? _fileName;
+    private List<PoEntry> _entries = [];
+    private List<TranslationLanguage> _languages = [];
+
+    private string _source = "en";
+    private string _target = "es";
+    private string _apiUrl = "https://translate.argosopentech.com";
+    private string _apiKey = string.Empty;
+
+    private bool _isRunning;
+    private bool _isDone;
+    private int _done;
+    private int _total;
+    private double _progress;
+    private List<LogLine> _log = [];
+    private CancellationTokenSource? _cts;
+
+    private bool _isTesting;
+    private string? _testMessage;
+    private Severity _testSeverity = Severity.Info;
+    private Color _testColor = Color.Default;
+    private string _testIcon = Icons.Material.Filled.NetworkCheck;
+
+    private int _step => _entries.Count == 0 ? 1
+        : (!_isRunning && !_isDone) ? 2
+        : 3;
+
+    private record LogLine(string Text, string Css);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _languages = await Translation.GetLanguagesAsync(_apiUrl);
+    }
+
+    private async Task LoadLanguagesAsync()
+    {
+        _languages = await Translation.GetLanguagesAsync(_apiUrl);
+        StateHasChanged();
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        _isTesting = true;
+        _testMessage = null;
+        StateHasChanged();
+
+        var (ok, message) = await Translation.TestConnectionAsync(_apiUrl);
+
+        _testSeverity = ok ? Severity.Success : Severity.Error;
+        _testColor = ok ? Color.Success : Color.Error;
+        _testIcon = ok ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.ErrorOutline;
+        _testMessage = ok
+            ? $"Connected successfully to {_apiUrl}"
+            : $"Cannot reach {_apiUrl} — {message}. Try another instance from the list.";
+
+        if (ok) _languages = await Translation.GetLanguagesAsync(_apiUrl);
+
+        _isTesting = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectInstance(string url)
+    {
+        _apiUrl = url;
+        _testMessage = null;
+        _testColor = Color.Default;
+        _testIcon = Icons.Material.Filled.NetworkCheck;
+        await TestConnectionAsync();
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        _fileName = file.Name;
+        _entries = [];
+        _isDone = false;
+        _log = [];
+        _done = 0;
+        _progress = 0;
+
+        await using var browserStream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await browserStream.CopyToAsync(ms);
+        ms.Position = 0;
+        _entries = PoService.Parse(ms);
+    }
+
+    private async Task StartAsync()
+    {
+        _isRunning = true;
+        _isDone = false;
+        _done = 0;
+        _log = [];
+        _cts = new CancellationTokenSource();
+
+        foreach (var e in _entries) e.Status = TranslationStatus.Pending;
+
+        var pending = _entries.Where(e => e.NeedsTranslation).ToList();
+        _total = pending.Count;
+        _progress = 0;
+
+        try
+        {
+            foreach (var entry in pending)
+            {
+                _cts.Token.ThrowIfCancellationRequested();
+
+                entry.Status = TranslationStatus.Translating;
+                AddLog($"⟳  {Clip(entry.MsgId)}", "log-pending");
+                await InvokeAsync(StateHasChanged);
+                await JS.InvokeVoidAsync("scrollBottom", "terminal-log");
+
+                try
+                {
+                    var translated = await Translation.TranslateAsync(
+                        entry.MsgId, _source, _target, _apiUrl, _apiKey,
+                        async waitSecs =>
+                        {
+                            ReplaceLastLog($"⏳  Rate limited — waiting {waitSecs}s before retry...", "log-pending");
+                            await InvokeAsync(StateHasChanged);
+                        },
+                        _cts.Token);
+
+                    entry.MsgStr = translated;
+                    entry.Status = TranslationStatus.Done;
+                    _done++;
+                    _progress = (double)_done / _total * 100;
+
+                    ReplaceLastLog($"✓  {Clip(entry.MsgId)}  →  {Clip(translated)}", "log-success");
+                }
+                catch (HttpRequestException ex)
+                {
+                    entry.Status = TranslationStatus.Error;
+                    ReplaceLastLog($"✗  {Clip(entry.MsgId)}  →  {ex.Message}", "log-error");
+                }
+                catch (OperationCanceledException)
+                {
+                    entry.Status = TranslationStatus.Pending;
+                    throw;
+                }
+
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(800, _cts.Token);
+            }
+
+            AddLog("✔  Translation complete!", "log-info");
+            _isDone = true;
+            _progress = 100;
+        }
+        catch (OperationCanceledException)
+        {
+            AddLog("⏹  Stopped by user.", "log-info");
+            _isDone = _done > 0;
+        }
+        finally
+        {
+            _isRunning = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ExportAsync()
+    {
+        var bytes = PoService.Generate(_entries);
+        var base64 = Convert.ToBase64String(bytes);
+        var name = Path.GetFileNameWithoutExtension(_fileName) + "_translated.po";
+        await JS.InvokeVoidAsync("downloadFile", name, base64);
+    }
+
+    private void AddLog(string text, string css)
+    {
+        _log.Add(new LogLine(text, css));
+        if (_log.Count > 300) _log.RemoveAt(0);
+    }
+
+    private void ReplaceLastLog(string text, string css)
+    {
+        if (_log.Count > 0) _log[^1] = new LogLine(text, css);
+        else _log.Add(new LogLine(text, css));
+    }
+
+    private string CardClass(int step) =>
+        $"mb-5 step-card {(_step == step ? "step-active" : string.Empty)}";
+
+    private Color AvatarColor(int step) => step switch
+    {
+        1 => _entries.Count > 0 ? Color.Success : Color.Primary,
+        2 => (_isRunning || _isDone) ? Color.Success : _entries.Count > 0 ? Color.Primary : Color.Default,
+        3 => _isDone ? Color.Success : _isRunning ? Color.Primary : Color.Default,
+        _ => Color.Default
+    };
+
+    private static string Clip(string text, int max = 65) =>
+        text.Length <= max ? text : text[..max] + "…";
+}

@@ -7,6 +7,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient<LibreTranslateService>();
+builder.Services.AddHttpClient<GoogleTranslateService>();
 builder.Services.AddScoped<PoFileService>();
 
 var app = builder.Build();

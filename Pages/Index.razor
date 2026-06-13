@@ -1,5 +1,6 @@
 @page "/"
-@inject LibreTranslateService Translation
+@inject LibreTranslateService LibreTranslation
+@inject GoogleTranslateService GoogleTranslation
 @inject PoFileService PoService
 @inject IJSRuntime JS
 
@@ -100,6 +101,24 @@
                         </div>
 
                         <MudGrid Spacing="3">
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1">Translation provider</MudText>
+                                <MudToggleGroup T="string" Value="_provider"
+                                                ValueChanged="OnProviderChanged"
+                                                SelectionMode="SelectionMode.SingleSelection"
+                                                Color="Color.Primary" Size="Size.Small"
+                                                Disabled="_isRunning">
+                                    <MudToggleItem Value="@("google")">
+                                        <MudIcon Icon="@Icons.Custom.Brands.Google" Size="Size.Small" Class="mr-1" />
+                                        Google Translate
+                                    </MudToggleItem>
+                                    <MudToggleItem Value="@("libre")">
+                                        <MudIcon Icon="@Icons.Material.Filled.Translate" Size="Size.Small" Class="mr-1" />
+                                        LibreTranslate
+                                    </MudToggleItem>
+                                </MudToggleGroup>
+                            </MudItem>
+
                             <MudItem xs="12" sm="6" md="3">
                                 <MudSelect T="string" @bind-Value="_source" Label="Source language"
                                            Variant="Variant.Outlined" Disabled="_isRunning">
@@ -120,60 +139,72 @@
                                 </MudSelect>
                             </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudTextField @bind-Value="_apiUrl"
-                                              Label="LibreTranslate URL"
-                                              Variant="Variant.Outlined"
-                                              Disabled="_isRunning"
-                                              Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Link"
-                                              HelperText="Public or self-hosted instance" />
-                            </MudItem>
+                            @if (_provider == "libre")
+                            {
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_apiUrl"
+                                                  Label="LibreTranslate URL"
+                                                  Variant="Variant.Outlined"
+                                                  Disabled="_isRunning"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Link"
+                                                  HelperText="Public or self-hosted instance" />
+                                </MudItem>
 
-                            <MudItem xs="12" md="6" Class="d-flex align-center gap-2">
-                                <MudTooltip Text="Test connection">
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="@_testColor"
-                                               StartIcon="@_testIcon"
-                                               OnClick="TestConnectionAsync"
-                                               Disabled="_isRunning || _isTesting">
-                                        @(_isTesting ? "Testing..." : "Test")
-                                    </MudButton>
-                                </MudTooltip>
-                                <MudTooltip Text="Reload language list">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                                   Color="Color.Secondary"
-                                                   OnClick="LoadLanguagesAsync"
-                                                   Disabled="_isRunning" />
-                                </MudTooltip>
-                                <MudMenu Label="Public instances" Variant="Variant.Text"
-                                         Color="Color.Default" Dense="true" Disabled="_isRunning">
-                                    @foreach (var url in LibreTranslateService.PublicInstances)
-                                    {
-                                        <MudMenuItem OnClick="@(() => SelectInstance(url))">@url</MudMenuItem>
-                                    }
-                                </MudMenu>
-                            </MudItem>
+                                <MudItem xs="12" md="6" Class="d-flex align-center gap-2">
+                                    <MudTooltip Text="Test connection">
+                                        <MudButton Variant="Variant.Outlined"
+                                                   Color="@_testColor"
+                                                   StartIcon="@_testIcon"
+                                                   OnClick="TestConnectionAsync"
+                                                   Disabled="_isRunning || _isTesting">
+                                            @(_isTesting ? "Testing..." : "Test")
+                                        </MudButton>
+                                    </MudTooltip>
+                                    <MudTooltip Text="Reload language list">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                                       Color="Color.Secondary"
+                                                       OnClick="LoadLanguagesAsync"
+                                                       Disabled="_isRunning" />
+                                    </MudTooltip>
+                                    <MudMenu Label="Public instances" Variant="Variant.Text"
+                                             Color="Color.Default" Dense="true" Disabled="_isRunning">
+                                        @foreach (var url in LibreTranslateService.PublicInstances)
+                                        {
+                                            <MudMenuItem OnClick="@(() => SelectInstance(url))">@url</MudMenuItem>
+                                        }
+                                    </MudMenu>
+                                </MudItem>
 
-                            @if (_testMessage != null)
+                                @if (_testMessage != null)
+                                {
+                                    <MudItem xs="12">
+                                        <MudAlert Severity="@_testSeverity" Dense="true" Class="py-1">
+                                            @_testMessage
+                                        </MudAlert>
+                                    </MudItem>
+                                }
+
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_apiKey"
+                                                  Label="API Key (optional)"
+                                                  Variant="Variant.Outlined"
+                                                  InputType="InputType.Password"
+                                                  Disabled="_isRunning"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.VpnKey"
+                                                  HelperText="Leave empty for public instances" />
+                                </MudItem>
+                            }
+                            else
                             {
                                 <MudItem xs="12">
-                                    <MudAlert Severity="@_testSeverity" Dense="true" Class="py-1">
-                                        @_testMessage
+                                    <MudAlert Severity="Severity.Info" Dense="true" Class="py-1">
+                                        Uses the unofficial Google Translate API — no API key required.
+                                        Respect rate limits: avoid large files in quick succession.
                                     </MudAlert>
                                 </MudItem>
                             }
-
-                            <MudItem xs="12" md="6">
-                                <MudTextField @bind-Value="_apiKey"
-                                              Label="API Key (optional)"
-                                              Variant="Variant.Outlined"
-                                              InputType="InputType.Password"
-                                              Disabled="_isRunning"
-                                              Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.VpnKey"
-                                              HelperText="Leave empty for public instances" />
-                            </MudItem>
                         </MudGrid>
                     </MudCardContent>
                 </MudCard>
@@ -300,6 +331,7 @@
     private List<PoEntry> _entries = [];
     private List<TranslationLanguage> _languages = [];
 
+    private string _provider = "google";
     private string _source = "en";
     private string _target = "es";
     private string _apiUrl = "https://translate.argosopentech.com";
@@ -327,13 +359,22 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _languages = await Translation.GetLanguagesAsync(_apiUrl);
+        _languages = GoogleTranslateService.GetLanguages();
     }
 
     private async Task LoadLanguagesAsync()
     {
-        _languages = await Translation.GetLanguagesAsync(_apiUrl);
+        _languages = _provider == "google"
+            ? GoogleTranslateService.GetLanguages()
+            : await LibreTranslation.GetLanguagesAsync(_apiUrl);
         StateHasChanged();
+    }
+
+    private async Task OnProviderChanged(string provider)
+    {
+        _provider = provider;
+        _testMessage = null;
+        await LoadLanguagesAsync();
     }
 
     private async Task TestConnectionAsync()
@@ -342,7 +383,7 @@
         _testMessage = null;
         StateHasChanged();
 
-        var (ok, message) = await Translation.TestConnectionAsync(_apiUrl);
+        var (ok, message) = await LibreTranslation.TestConnectionAsync(_apiUrl);
 
         _testSeverity = ok ? Severity.Success : Severity.Error;
         _testColor = ok ? Color.Success : Color.Error;
@@ -351,7 +392,7 @@
             ? $"Connected successfully to {_apiUrl}"
             : $"Cannot reach {_apiUrl} — {message}. Try another instance from the list.";
 
-        if (ok) _languages = await Translation.GetLanguagesAsync(_apiUrl);
+        if (ok) _languages = await LibreTranslation.GetLanguagesAsync(_apiUrl);
 
         _isTesting = false;
         StateHasChanged();
@@ -410,14 +451,17 @@
 
                 try
                 {
-                    var translated = await Translation.TranslateAsync(
-                        entry.MsgId, _source, _target, _apiUrl, _apiKey,
-                        async waitSecs =>
-                        {
-                            ReplaceLastLog($"⏳  Rate limited — waiting {waitSecs}s before retry...", "log-pending");
-                            await InvokeAsync(StateHasChanged);
-                        },
-                        _cts.Token);
+                    Func<int, Task> onRateLimit = async waitSecs =>
+                    {
+                        ReplaceLastLog($"⏳  Rate limited — waiting {waitSecs}s before retry...", "log-pending");
+                        await InvokeAsync(StateHasChanged);
+                    };
+
+                    var translated = _provider == "google"
+                        ? await GoogleTranslation.TranslateAsync(
+                            entry.MsgId, _source, _target, onRateLimit, _cts.Token)
+                        : await LibreTranslation.TranslateAsync(
+                            entry.MsgId, _source, _target, _apiUrl, _apiKey, onRateLimit, _cts.Token);
 
                     entry.MsgStr = translated;
                     entry.Status = TranslationStatus.Done;
